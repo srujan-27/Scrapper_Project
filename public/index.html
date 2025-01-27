@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scraper Tool</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Scraper Tool</h1>
+    <p>Select a platform:</p>
+    <button class="youtube" onclick="showInput('youtube')">YouTube</button>
+    <button class="instagram" onclick="showInput('instagram')">Instagram</button>
+
+    <div id="inputSection" style="display: none;">
+      <p id="platformText"></p>
+      <input type="text" id="linkInput" placeholder="Paste the link here" style="width: 100%; padding: 8px;" />
+      <button onclick="fetchResults()">Fetch Results</button>
+    </div>
+
+    <div id="results" style="display: none;">
+      <h3>Results:</h3>
+      <div id="resultOutput"></div>
+    </div>
+  </div>
+
+  <script>
+    let selectedPlatform = "";
+
+    function showInput(platform) {
+      selectedPlatform = platform;
+      const platformText = platform === "youtube"
+        ? "You selected YouTube. Paste the video link below:"
+        : "You selected Instagram. Paste the profile or post link below:";
+      document.getElementById("platformText").innerText = platformText;
+      document.getElementById("inputSection").style.display = "block";
+    }
+
+    async function fetchResults() {
+      const link = document.getElementById("linkInput").value;
+      if (!link) {
+        alert("Please enter a valid link.");
+        return;
+      }
+
+      // Show a loading message
+      document.getElementById("resultOutput").innerHTML = "<p>Loading results...</p>";
+      document.getElementById("results").style.display = "block";
+
+      try {
+        const response = await fetch(`http://localhost:3000/scrape`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ platform: selectedPlatform, link }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch results.");
+        }
+
+        const result = await response.json();
+        displayResults(result);
+      } catch (err) {
+        document.getElementById("resultOutput").innerHTML = `<p>Error: ${err.message}</p>`;
+      }
+    }
+
+    function displayResults(result) {
+      const resultContainer = document.getElementById("resultOutput");
+      resultContainer.innerHTML = "";
+
+      // Format the result as key-value pairs
+      for (const [key, value] of Object.entries(result)) {
+        const resultItem = document.createElement("p");
+        resultItem.innerHTML = `<strong>${key}:</strong> ${value}`;
+        resultContainer.appendChild(resultItem);
+      }
+    }
+  </script>
+</body>
+</html
